@@ -53,7 +53,7 @@ namespace Budgeteer
 		static async void EndGetOcrResponse(IAsyncResult result)
 		{
 			HttpWebRequest request = (HttpWebRequest)result.AsyncState;
-			HttpWebResponse response = request.EndGetResponse (result);
+			HttpWebResponse response = (HttpWebResponse)request.EndGetResponse (result);
 
 			Stream responseStream = response.GetResponseStream ();
 			string ocrText = await new StreamReader (responseStream).ReadToEndAsync ();
