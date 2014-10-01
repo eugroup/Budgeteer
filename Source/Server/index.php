@@ -2,10 +2,12 @@
 // default values
 $output_type = "txt";
 $lang = "eng";
+$pre = true;
 
 // if get parameters are set default values are overwritten
 if(isset($_GET["output"])) $output_type = $_GET["output"];
 if(isset($_GET["lang"])) $lang = $_GET["lang"];
+if(isset($_GET["pre"]) && $_GET["pre"] == "false") $pre = false;
 
 // generate a timestamp for the process below
 $timestamp = time();
@@ -26,14 +28,24 @@ $PWD = realpath(dirname(__FILE__));
 
 
 // pre-processing commands
-// greyscaling + rotating etc.
-exec("./textcleaner -g -e normalize -f 25 -o 10 -u -s 1 -T -p 10 $PWD/$timestamp.jpg pre_$timestamp.jpg");
 
-// greyscaled image to black / white image
-exec("./2colorthresh pre_$timestamp.jpg output_$timestamp.jpg");
+// greyscaling + rotating etc.
+if($pre) {
+	
+	//exec("./textcleaner -g -e normalize -f 25 -o 10 -u -s 1 -T -p 10 $PWD/$timestamp.jpg pre_$timestamp.jpg");
+	exec("./textcleaner -g -e normalize $PWD/$timestamp.jpg pre_$timestamp.jpg");
+	
+	exec("./feather -d 1 $PWD/pre_$timestamp.jpg pre2_$timestamp.jpg");
+
+	// greyscaled image to black / white image
+	exec("./2colorthresh pre2_$timestamp.jpg output_$timestamp.jpg");
+}
 
 // ocr command
-exec("tesseract $PWD/output_$timestamp.jpg $timestamp.jpg -l $lang");
+if($pre)
+	exec("tesseract $PWD/output_$timestamp.jpg $timestamp.jpg -l $lang");
+else
+	exec("tesseract $PWD/$timestamp.jpg $timestamp.jpg -l $lang");
 
 // response
 switch($output_type){
