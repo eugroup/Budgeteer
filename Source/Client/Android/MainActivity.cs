@@ -11,7 +11,8 @@ using Android.Hardware;
 
 namespace BudgeteerAndroid
 {
-	[Activity (Label = "Budgeteer", MainLauncher = true, Icon = "@drawable/icon", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
+	[Activity (Label = "Budgeteer", MainLauncher = true, Icon = "@drawable/icon", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait,
+		Theme="@android:style/Theme.Holo.Light")]
 	public class MainActivity : Activity, TextureView.ISurfaceTextureListener, Camera.IAutoFocusCallback
 	{
 
