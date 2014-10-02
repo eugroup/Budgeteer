@@ -8,23 +8,30 @@ using Android.Widget;
 using Android.OS;
 using Budgeteer;
 using Android.Hardware;
+using System.IO;
 
 namespace BudgeteerAndroid
 {
-	[Activity (Label = "Budgeteer", MainLauncher = true, Icon = "@drawable/icon", ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait,
-		Theme="@android:style/Theme.Holo.Light")]
-	public class MainActivity : Activity, TextureView.ISurfaceTextureListener, Camera.IAutoFocusCallback
+	[Activity (Label = "Budgeteer", MainLauncher = true, Icon = "@drawable/icon",
+		ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait, Theme="@android:style/Theme.Holo.Light")]
+	public class MainActivity : Activity, TextureView.ISurfaceTextureListener, Camera.IAutoFocusCallback,
+		Camera.IPictureCallback, Camera.IShutterCallback
 	{
-
+		/// <summary>
+		/// The main controller from the core part.
+		/// </summary>
 		private MainController mainController;
-
 		public MainController MainController {
 			get {
 				return mainController;
 			}
 		}
-
+			
 		private Camera camera;
+
+		/// <summary>
+		/// The texture view for previewing the camera image.
+		/// </summary>
 		private TextureView textureView;
 
 		public MainActivity()
@@ -36,15 +43,21 @@ namespace BudgeteerAndroid
 		{
 			base.OnCreate (bundle);
 
-			textureView = new TextureView (this);
+			SetContentView (Resource.Layout.Main);
+
+			textureView = (TextureView)FindViewById (Resource.Id.cameraPreview);
 			textureView.SurfaceTextureListener = this;
 
-			SetContentView (textureView);
+			Button snapButton = (Button)FindViewById (Resource.Id.buttonTakePhoto);
+			snapButton.Click += (object sender, EventArgs e) => {
+				camera.TakePicture(this, null, this);
+			};
 		}
-
+			
 		public void OnSurfaceTextureAvailable(Android.Graphics.SurfaceTexture surface, int w, int h)
 		{
-			textureView.LayoutParameters = new FrameLayout.LayoutParams (w, h);
+
+			//textureView.LayoutParameters = new FrameLayout.LayoutParams (w, h);
 
 			camera = Camera.Open ();
 
@@ -84,6 +97,21 @@ namespace BudgeteerAndroid
 		public void OnAutoFocus (bool success, Camera camera)
 		{
 			camera.AutoFocus (this);
+		}
+			
+		public void OnPictureTaken (byte[] data, Camera camera)
+		{
+			Toast.MakeText (this, "Photo taken. size: " + data.Length, ToastLength.Short).Show();
+			camera.StartPreview ();
+
+			Stream imageStream = new MemoryStream(data);
+
+			mainController.OnPictureTaken (imageStream);
+		}
+
+		public void OnShutter ()
+		{
+
 		}
 	}
 		

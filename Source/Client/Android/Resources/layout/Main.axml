@@ -4,4 +4,33 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:minWidth="25px"
-    android:minHeight="25px" />
+    android:minHeight="25px">
+    <FrameLayout
+        android:minWidth="25px"
+        android:minHeight="25px"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/frameLayout1">
+        <TextureView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/cameraPreview"
+            android:background="#ffffffff" />
+        <RelativeLayout
+            android:minWidth="25px"
+            android:minHeight="25px"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/relativeLayout1">
+            <Button
+                android:text="@string/take_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/buttonTakePhoto"
+                android:layout_alignParentBottom="true"
+                android:layout_centerVertical="false"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="20dp" />
+        </RelativeLayout>
+    </FrameLayout>
+</LinearLayout>
