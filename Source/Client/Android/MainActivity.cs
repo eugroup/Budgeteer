@@ -6,30 +6,124 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
+using Budgeteer;
+using Android.Hardware;
+using System.IO;
 
 namespace BudgeteerAndroid
 {
-	[Activity (Label = "Budgeteer", MainLauncher = true, Icon = "@drawable/icon")]
-	public class MainActivity : Activity
+	[Activity (Label = "Budgeteer", MainLauncher = true, Icon = "@drawable/icon",
+		ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait, Theme="@android:style/Theme.Holo.Light")]
+	public class MainActivity : Activity, TextureView.ISurfaceTextureListener, Camera.IAutoFocusCallback,
+		Camera.IPictureCallback, Camera.IShutterCallback
 	{
-		int count = 1;
+		/// <summary>
+		/// The main controller from the core part.
+		/// </summary>
+		private MainController mainController;
+		public MainController MainController {
+			get {
+				return mainController;
+			}
+		}
+			
+		private Camera camera;
 
+		/// <summary>
+		/// The texture view for previewing the camera image.
+		/// </summary>
+		private TextureView textureView;
+
+		public MainActivity()
+		{
+			mainController = new MainController ();
+		}
+
+		/// <summary>
+		/// Invoked when the activity is beeing created.
+		/// </summary>
+		/// <param name="bundle">Bundle.</param>
 		protected override void OnCreate (Bundle bundle)
 		{
 			base.OnCreate (bundle);
 
-			// Set our view from the "main" layout resource
 			SetContentView (Resource.Layout.Main);
 
-			// Get our button from the layout resource,
-			// and attach an event to it
-			Button button = FindViewById<Button> (Resource.Id.myButton);
-			
-			button.Click += delegate {
-				button.Text = string.Format ("{0} clicks!", count++);
+			textureView = (TextureView)FindViewById (Resource.Id.cameraPreview);
+			textureView.SurfaceTextureListener = this;
+
+			Button snapButton = (Button)FindViewById (Resource.Id.buttonTakePhoto);
+			snapButton.Click += (object sender, EventArgs e) => {
+				camera.TakePicture(this, null, this);
 			};
 		}
+			
+		public void OnSurfaceTextureAvailable(Android.Graphics.SurfaceTexture surface, int w, int h)
+		{
+			camera = Camera.Open ();
+
+			Camera.Parameters p = camera.GetParameters ();
+			p.PictureFormat = Android.Graphics.ImageFormatType.Jpeg;
+			Camera.Size previewSize = p.PreviewSize;
+			camera.SetParameters (p);
+			camera.SetDisplayOrientation (90);
+
+			Android.Graphics.Matrix m = new Android.Graphics.Matrix ();
+			m.SetScale(1,  (float)(previewSize.Width) / h);
+			textureView.SetTransform (m);
+
+			camera.SetPreviewTexture (surface);
+			camera.StartPreview ();
+			camera.AutoFocus (this);
+		}
+
+		public bool OnSurfaceTextureDestroyed(Android.Graphics.SurfaceTexture surface)
+		{
+			camera.StopPreview ();
+			camera.Release ();
+
+			return true;
+		}
+			
+		public void OnSurfaceTextureSizeChanged (Android.Graphics.SurfaceTexture surface, int width, int height)
+		{
+
+		}
+
+		public void OnSurfaceTextureUpdated (Android.Graphics.SurfaceTexture surface)
+		{
+
+		}
+
+		/// <summary>
+		/// Invaked when the auto focus finished.
+		/// </summary>
+		/// <param name="success">If set to <c>true</c> success.</param>
+		/// <param name="camera">Camera.</param>
+		public void OnAutoFocus (bool success, Camera camera)
+		{
+			camera.AutoFocus (this);
+		}
+
+		/// <summary>
+		/// Invoked if a picture was taken and the JPEG data are available.
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="camera">Camera.</param>
+		public void OnPictureTaken (byte[] data, Camera camera)
+		{
+			Toast.MakeText (this, "Photo taken. size: " + data.Length, ToastLength.Short).Show();
+			camera.StartPreview ();
+
+			Stream imageStream = new MemoryStream(data);
+
+			mainController.OnPictureTaken (imageStream);
+		}
+
+		public void OnShutter ()
+		{
+
+		}
 	}
+		
 }
-
-
