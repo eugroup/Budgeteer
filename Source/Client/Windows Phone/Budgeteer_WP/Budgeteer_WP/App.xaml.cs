@@ -120,16 +120,16 @@ namespace Budgeteer_WP
 
         protected override void OnActivated(IActivatedEventArgs args)
         {
-            /*ContinuationManager = new ContinuationManager();
+            ContinuationManager = new ContinuationManager();
 
-            IContinuationActivatedEventArgs continuationEventArgs = args as IContinuationActivatedEventArgs;
+            FileOpenPickerContinuationEventArgs continuationEventArgs = args as FileOpenPickerContinuationEventArgs;
             if (continuationEventArgs != null)
             {
-                //                Frame MainPageFrame = MainPage.Current.FindName(
-                App.
-            }*/
+                MainPage.Current.ContinueFileOpenPicker(continuationEventArgs);
+            }
             base.OnActivated(args);
         }
+
 
         /// <summary>
         /// Invoked when application execution is being suspended.  Application state is saved

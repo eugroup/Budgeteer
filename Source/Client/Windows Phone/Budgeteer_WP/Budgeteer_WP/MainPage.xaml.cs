@@ -23,6 +23,7 @@ using Windows.Media.MediaProperties;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.Graphics.Imaging;
+using Windows.ApplicationModel.Activation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=391641
 
@@ -31,13 +32,13 @@ namespace Budgeteer_WP
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage : Page//, Windows.Phone.Common.IFileOpenPickerContinuable
+    public sealed partial class MainPage : Page, Windows.Phone.Common.IFileOpenPickerContinuable
     {
         public static MainPage Current{get; private set;}
         MediaCapture captureManager;
-        bool isCameraPreviewing = false;
-        bool isCameraRecording = false;
-        bool isCameraInitialized = false;
+        public bool IsCameraPreviewing { get; private set; }
+        public bool IsCameraRecording { get; private set; }
+        public bool IsCameraInitialized {get; private set;}
 
         public MainPage()
         {
@@ -45,6 +46,7 @@ namespace Budgeteer_WP
             this.InitializeComponent();
             
             this.NavigationCacheMode = NavigationCacheMode.Required;
+            IsCameraInitialized = false;
         }
 
         /// <summary>
@@ -67,30 +69,48 @@ namespace Budgeteer_WP
 
         protected override async void OnNavigatedFrom(NavigationEventArgs e)
         {
-            if (isCameraInitialized) await DestroyCamera(captureManager);
+            if (IsCameraInitialized) await DestroyCamera(captureManager);
             base.OnNavigatedFrom(e);
         }
 
         protected override async void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            if (isCameraInitialized) await DestroyCamera(captureManager);
+            if (IsCameraInitialized) await DestroyCamera(captureManager);
             e.Cancel = true;
             base.OnNavigatingFrom(e);
         }
 
-
+        /// <summary>
+        /// Opens a file picker in which the user can choose an image to use for ocr
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ChooseImageButton_Click(object sender, RoutedEventArgs e)
         {
-            /*FileOpenPicker picker = new FileOpenPicker();
+            FileOpenPicker picker = new FileOpenPicker();
             picker.ViewMode = PickerViewMode.Thumbnail;
             picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
             picker.FileTypeFilter.Add(".jpeg");
             picker.FileTypeFilter.Add(".jpg");
-            picker.FileTypeFilter.Add(".png");*/
+            picker.FileTypeFilter.Add(".png");
+            picker.ContinuationData.Add(ContinuationAction.ContinuationAction.ToString(), ContinuationAction.ScanImageFromLibrary.ToString());
 
-            //picker.PickSingleFileAndContinue();
-            /*if (isCameraInitialized) await DestroyCamera(captureManager);
-            ScanImage.Source = new BitmapImage(new Uri(file.Path, UriKind.Absolute));*/
+            picker.PickSingleFileAndContinue();
+        }
+
+        /// <summary>
+        /// Is run after FileOpenPicker returns after the user has picked an image
+        /// </summary>
+        /// <param name="file"></param>
+        private async void ContinueImageChosen(StorageFile file)
+        {
+            //Deactivate the camera
+            if (IsCameraInitialized) await DestroyCamera(captureManager);
+
+            //Display the image
+            BitmapImage bmp = new BitmapImage();
+            await bmp.SetSourceAsync(await file.OpenAsync(FileAccessMode.Read));
+            ScanImage.Source = bmp;
         }
 
 
@@ -100,7 +120,7 @@ namespace Budgeteer_WP
         /// <returns></returns>
         private async Task StartCamera()
         {
-            if (!isCameraInitialized)
+            if (!IsCameraInitialized)
             {
                 var cameras = await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture);
                 MediaCaptureInitializationSettings settings;// = new MediaCaptureInitializationSettings();
@@ -116,12 +136,12 @@ namespace Budgeteer_WP
                 captureManager = new MediaCapture();
 
                 await captureManager.InitializeAsync(settings);
-                isCameraInitialized = true;
+                IsCameraInitialized = true;
 
                 ScanPreviewImage.Source = captureManager;
                 ScanPreviewImage.Stretch = Stretch.UniformToFill;
                 await captureManager.StartPreviewAsync();
-                isCameraPreviewing = true;
+                IsCameraPreviewing = true;
 
                 captureManager.SetPreviewRotation(VideoRotation.Clockwise90Degrees);
                 captureManager.SetRecordRotation(VideoRotation.Clockwise90Degrees);
@@ -135,24 +155,25 @@ namespace Budgeteer_WP
         /// </summary>
         /// <param name="capture">The MediaCapture instance currently used</param>
         /// <returns></returns>
-        private async Task DestroyCamera(MediaCapture capture)
+        public async Task DestroyCamera(MediaCapture capture)
         {
+            //TODO: Call this method every time the app loses focus or is terminated
             if (capture != null)
             {
-                if (isCameraRecording)
+                if (IsCameraRecording)
                 {
                     await capture.StopRecordAsync();
-                    isCameraRecording = false;
+                    IsCameraRecording = false;
                 }
-                if (isCameraPreviewing)
+                if (IsCameraPreviewing)
                 {
                     await capture.StopPreviewAsync();
                     ScanPreviewImage.Source = null;
-                    isCameraPreviewing = false;
+                    IsCameraPreviewing = false;
                 }
                 capture.Dispose();
                 capture = null;
-                isCameraInitialized = false;
+                IsCameraInitialized = false;
                 CameraButton.Visibility = Visibility.Collapsed;
             }
         }
@@ -165,19 +186,20 @@ namespace Budgeteer_WP
         /// <param name="e"></param>
         private async void CaptureImageButton_Click(object sender, RoutedEventArgs e)
         {
-            if (isCameraInitialized)
+            if (IsCameraInitialized)
             {
                 //Get Image
                 IRandomAccessStream imageStream = await CaptureImage();
                 await RotateImage(imageStream, BitmapRotation.Clockwise90Degrees);//Needs to be rotated 90 degrees when in portrait mode
 
                 //Write image stream to temporary file in local storage (for displaying image)
-                StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("temp.jpg", CreationCollisionOption.ReplaceExisting);
+                /*StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("temp.jpg", CreationCollisionOption.ReplaceExisting);
                 IRandomAccessStream fileStream = await file.OpenAsync(FileAccessMode.ReadWrite);
-                await imageStream.AsStream().CopyToAsync(fileStream.AsStreamForWrite());
+                await imageStream.AsStream().CopyToAsync(fileStream.AsStreamForWrite());*/
 
                 //Show image
-                BitmapImage bmp = new BitmapImage(new Uri(file.Path));
+                BitmapImage bmp = new BitmapImage();
+                await bmp.SetSourceAsync(imageStream);
                 ScanImage.Source = bmp;
                 AcceptPictureButton.Visibility = Visibility.Visible;
                 RedoPictureButton.Visibility = Visibility.Visible;
@@ -232,6 +254,31 @@ namespace Budgeteer_WP
             await StartCamera();
         }
 
+        /// <summary>
+        /// Is called by App.xaml.cs in OnActivated if the current session is a continuation after a FileOpenPicker was used
+        /// </summary>
+        /// <param name="args"></param>
+        public void ContinueFileOpenPicker(FileOpenPickerContinuationEventArgs args)
+        {
+            if (args.ContinuationData.ContainsKey(ContinuationAction.ContinuationAction.ToString()))
+            {
+                ContinuationAction action;
+                if (Enum.TryParse<ContinuationAction>((string)args.ContinuationData[ContinuationAction.ContinuationAction.ToString()], out action))
+                {
+                    switch (action)
+                    {
+                        case ContinuationAction.ScanImageFromLibrary:
+                        {
+                            if (args != null && args.Files.Count > 0)
+                            {
+                                ContinueImageChosen(args.Files[0]);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
     }
 }

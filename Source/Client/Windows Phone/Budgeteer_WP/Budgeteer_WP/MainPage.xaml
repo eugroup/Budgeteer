@@ -12,7 +12,6 @@
 
     <Grid>
         <Pivot Background="Aquamarine" Margin="0,0,0,-1">
-            <PivotItem x:Name="StatisticsPivotItem" Header="Statistics" Margin="0,0,0,-0.833"/>
             <PivotItem x:Name="ReceiptsPivotItem" Header="Receipts" Margin="0,0,0,-0.833">
                 <ListBox Height="535" Margin="10,10,290,0" VerticalAlignment="Top" Width="380"/>
             </PivotItem>
@@ -55,7 +54,7 @@
                 </Grid>
 
             </PivotItem>
-
+            <PivotItem x:Name="StatisticsPivotItem" Header="Statistics" Margin="0,0,0,-0.833"/>
         </Pivot>
     </Grid>
 </Page>
