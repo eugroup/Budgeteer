@@ -15,7 +15,9 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
-
+using Windows.Media.Capture;
+using System.Threading.Tasks;
+using Windows.Phone.Common;
 // The Blank Application template is documented at http://go.microsoft.com/fwlink/?LinkId=391641
 
 namespace Budgeteer_WP
@@ -25,6 +27,7 @@ namespace Budgeteer_WP
     /// </summary>
     public sealed partial class App : Application
     {
+        public ContinuationManager ContinuationManager { get; private set; }
         private TransitionCollection transitions;
 
         /// <summary>
@@ -36,6 +39,8 @@ namespace Budgeteer_WP
             this.InitializeComponent();
             this.Suspending += this.OnSuspending;
         }
+
+
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
@@ -113,6 +118,19 @@ namespace Budgeteer_WP
             rootFrame.Navigated -= this.RootFrame_FirstNavigated;
         }
 
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            /*ContinuationManager = new ContinuationManager();
+
+            IContinuationActivatedEventArgs continuationEventArgs = args as IContinuationActivatedEventArgs;
+            if (continuationEventArgs != null)
+            {
+                //                Frame MainPageFrame = MainPage.Current.FindName(
+                App.
+            }*/
+            base.OnActivated(args);
+        }
+
         /// <summary>
         /// Invoked when application execution is being suspended.  Application state is saved
         /// without knowing whether the application will be terminated or resumed with the contents
@@ -120,12 +138,15 @@ namespace Budgeteer_WP
         /// </summary>
         /// <param name="sender">The source of the suspend request.</param>
         /// <param name="e">Details about the suspend request.</param>
-        private void OnSuspending(object sender, SuspendingEventArgs e)
+        private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
-
-            // TODO: Save application state and stop any background activity
+            await SuspensionManager.SaveAsync();
             deferral.Complete();
         }
+
+        
+
+        
     }
 }

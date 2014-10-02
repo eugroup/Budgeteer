@@ -5,10 +5,57 @@
     xmlns:local="using:Budgeteer_WP"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    mc:Ignorable="d">
+    <Page.Background>
+        <ImageBrush Stretch="Fill"/>
+    </Page.Background>
 
     <Grid>
+        <Pivot Background="Aquamarine" Margin="0,0,0,-1">
+            <PivotItem x:Name="StatisticsPivotItem" Header="Statistics" Margin="0,0,0,-0.833"/>
+            <PivotItem x:Name="ReceiptsPivotItem" Header="Receipts" Margin="0,0,0,-0.833">
+                <ListBox Height="535" Margin="10,10,290,0" VerticalAlignment="Top" Width="380"/>
+            </PivotItem>
+            <PivotItem x:Name="ScanPivotItem" Header="Scan receipt" Margin="0,0,0,-0.833">
+                <Grid>
 
+                    <CaptureElement x:Name="ScanPreviewImage" Margin="0,0,0,0" Stretch="UniformToFill"/>
+                    <Image x:Name="ScanImage" RenderTransformOrigin="0.5,0.5" UseLayoutRounding="False" d:LayoutRounding="Auto" Stretch="UniformToFill" />
+                    <Button x:Name="CameraButton" Content="" HorizontalAlignment="Left" Margin="149,383,0,0" VerticalAlignment="Top" Height="123" Click="CaptureImageButton_Click" BorderBrush="Transparent" Visibility="Visible">
+                        <Button.Background>
+                            <ImageBrush Stretch="UniformToFill" ImageSource="Icons/Camera.png"/>
+                        </Button.Background>
+
+                    </Button>
+                    <Button x:Name="AcceptPictureButton" Content="" HorizontalAlignment="Left" Margin="23,315,0,0" VerticalAlignment="Top" Height="100" Width="100" Visibility="Collapsed">
+                        <Button.Background>
+                            <ImageBrush Stretch="UniformToFill" ImageSource="Icons/Confirm.png"/>
+                        </Button.Background>
+                        <Button.BorderBrush>
+                            <ImageBrush Stretch="Fill"/>
+                        </Button.BorderBrush>
+                    </Button>
+                    <Button x:Name="RedoPictureButton" Content="" HorizontalAlignment="Left" Margin="23,401,0,0" VerticalAlignment="Top" BorderBrush="Transparent" Width="100" Height="100" Visibility="Collapsed" Click="RedoPictureButton_Click">
+                        <Button.Background>
+                            <ImageBrush Stretch="UniformToFill" ImageSource="Icons/Redo.png"/>
+                        </Button.Background>
+                    </Button>
+                    <Button x:Name="ChooseImageButton" Content="" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="Transparent" Width="100" Height="100" RenderTransformOrigin="0.5,0.5" Click="ChooseImageButton_Click">
+                        <Button.RenderTransform>
+                            <CompositeTransform ScaleX="0.5" ScaleY="0.55"/>
+                        </Button.RenderTransform>
+                        <Button.Background>
+                            <ImageBrush Stretch="UniformToFill" ImageSource="Icons/PictureFolder.png">
+                                <ImageBrush.RelativeTransform>
+                                    <CompositeTransform CenterY="0.5" CenterX="0.5"/>
+                                </ImageBrush.RelativeTransform>
+                            </ImageBrush>
+                        </Button.Background>
+                    </Button>
+                </Grid>
+
+            </PivotItem>
+
+        </Pivot>
     </Grid>
 </Page>
