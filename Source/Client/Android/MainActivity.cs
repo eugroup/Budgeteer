@@ -39,6 +39,10 @@ namespace BudgeteerAndroid
 			mainController = new MainController ();
 		}
 
+		/// <summary>
+		/// Invoked when the activity is beeing created.
+		/// </summary>
+		/// <param name="bundle">Bundle.</param>
 		protected override void OnCreate (Bundle bundle)
 		{
 			base.OnCreate (bundle);
@@ -94,11 +98,21 @@ namespace BudgeteerAndroid
 
 		}
 
+		/// <summary>
+		/// Invaked when the auto focus finished.
+		/// </summary>
+		/// <param name="success">If set to <c>true</c> success.</param>
+		/// <param name="camera">Camera.</param>
 		public void OnAutoFocus (bool success, Camera camera)
 		{
 			camera.AutoFocus (this);
 		}
-			
+
+		/// <summary>
+		/// Invoked if a picture was taken and the JPEG data are available.
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="camera">Camera.</param>
 		public void OnPictureTaken (byte[] data, Camera camera)
 		{
 			Toast.MakeText (this, "Photo taken. size: " + data.Length, ToastLength.Short).Show();
