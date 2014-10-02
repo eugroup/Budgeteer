@@ -60,9 +60,6 @@ namespace BudgeteerAndroid
 			
 		public void OnSurfaceTextureAvailable(Android.Graphics.SurfaceTexture surface, int w, int h)
 		{
-
-			//textureView.LayoutParameters = new FrameLayout.LayoutParams (w, h);
-
 			camera = Camera.Open ();
 
 			Camera.Parameters p = camera.GetParameters ();
