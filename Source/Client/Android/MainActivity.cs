@@ -43,23 +43,21 @@ namespace BudgeteerAndroid
 
 		public void OnSurfaceTextureAvailable(Android.Graphics.SurfaceTexture surface, int w, int h)
 		{
+			textureView.LayoutParameters = new FrameLayout.LayoutParams (w, h);
+
 			camera = Camera.Open ();
 
 			Camera.Parameters p = camera.GetParameters ();
-			//p.SetPreviewSize (w, h);
 			p.PictureFormat = Android.Graphics.ImageFormatType.Jpeg;
 			Camera.Size previewSize = p.PreviewSize;
 			camera.SetParameters (p);
 			camera.SetDisplayOrientation (90);
 
-			textureView.LayoutParameters = new FrameLayout.LayoutParams (w, h);
 			Android.Graphics.Matrix m = new Android.Graphics.Matrix ();
-
 			m.SetScale(1,  (float)(previewSize.Width) / h);
-
 			textureView.SetTransform (m);
-			camera.SetPreviewTexture (surface);
 
+			camera.SetPreviewTexture (surface);
 			camera.StartPreview ();
 			camera.AutoFocus (this);
 		}
@@ -89,4 +87,3 @@ namespace BudgeteerAndroid
 	}
 		
 }
-
