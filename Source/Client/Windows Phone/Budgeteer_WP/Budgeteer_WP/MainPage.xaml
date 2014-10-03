@@ -26,7 +26,7 @@
                         </Button.Background>
 
                     </Button>
-                    <Button x:Name="AcceptPictureButton" Content="" HorizontalAlignment="Left" Margin="23,315,0,0" VerticalAlignment="Top" Height="100" Width="100" Visibility="Collapsed">
+                    <Button x:Name="AcceptPictureButton" Content="" HorizontalAlignment="Left" Margin="23,315,0,0" VerticalAlignment="Top" Height="100" Width="100" Visibility="Collapsed" Click="AcceptPictureButton_Click">
                         <Button.Background>
                             <ImageBrush Stretch="UniformToFill" ImageSource="Icons/Confirm.png"/>
                         </Button.Background>
@@ -54,7 +54,9 @@
                 </Grid>
 
             </PivotItem>
-            <PivotItem x:Name="StatisticsPivotItem" Header="Statistics" Margin="0,0,0,-0.833"/>
+            <PivotItem x:Name="StatisticsPivotItem" Header="Statistics" Margin="0,0,0,-0.833">
+                <TextBlock x:Name="OcrTextBlock" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Height="534" Width="380" FontSize="14"/>
+            </PivotItem>
         </Pivot>
     </Grid>
 </Page>

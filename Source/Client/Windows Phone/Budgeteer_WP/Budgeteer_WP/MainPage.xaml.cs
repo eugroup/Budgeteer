@@ -40,6 +40,7 @@ namespace Budgeteer_WP
         public bool IsCameraRecording { get; private set; }
         public bool IsCameraInitialized {get; private set;}
 
+        IRandomAccessStream currentImageStream;
         public MainPage()
         {
             MainPage.Current = this;
@@ -47,6 +48,8 @@ namespace Budgeteer_WP
             
             this.NavigationCacheMode = NavigationCacheMode.Required;
             IsCameraInitialized = false;
+
+            Ocr.ReceivedOcrData += Ocr_ReceivedOcrData;
         }
 
         /// <summary>
@@ -69,13 +72,13 @@ namespace Budgeteer_WP
 
         protected override async void OnNavigatedFrom(NavigationEventArgs e)
         {
-            if (IsCameraInitialized) await DestroyCamera(captureManager);
+            if (IsCameraInitialized) await StopCamera(captureManager);
             base.OnNavigatedFrom(e);
         }
 
         protected override async void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            if (IsCameraInitialized) await DestroyCamera(captureManager);
+            if (IsCameraInitialized) await StopCamera(captureManager);
             e.Cancel = true;
             base.OnNavigatingFrom(e);
         }
@@ -105,12 +108,10 @@ namespace Budgeteer_WP
         private async void ContinueImageChosen(StorageFile file)
         {
             //Deactivate the camera
-            if (IsCameraInitialized) await DestroyCamera(captureManager);
+            if (IsCameraInitialized) await StopCamera(captureManager);
 
             //Display the image
-            BitmapImage bmp = new BitmapImage();
-            await bmp.SetSourceAsync(await file.OpenAsync(FileAccessMode.Read));
-            ScanImage.Source = bmp;
+            await ShowPreview(await file.OpenAsync(FileAccessMode.Read));
         }
 
 
@@ -122,8 +123,9 @@ namespace Budgeteer_WP
         {
             if (!IsCameraInitialized)
             {
+                //Choose rear camera
                 var cameras = await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture);
-                MediaCaptureInitializationSettings settings;// = new MediaCaptureInitializationSettings();
+                MediaCaptureInitializationSettings settings;
                 if (cameras.Count == 1)
                 {
                     settings = new MediaCaptureInitializationSettings() { VideoDeviceId = cameras[0].Id };
@@ -133,19 +135,22 @@ namespace Budgeteer_WP
                     settings = new MediaCaptureInitializationSettings() { VideoDeviceId = cameras[1].Id };//front: 0, back: 1
                 }
 
+                //Start camera capturing instance
                 captureManager = new MediaCapture();
-
                 await captureManager.InitializeAsync(settings);
                 IsCameraInitialized = true;
 
+                //Start preview
                 ScanPreviewImage.Source = captureManager;
                 ScanPreviewImage.Stretch = Stretch.UniformToFill;
                 await captureManager.StartPreviewAsync();
                 IsCameraPreviewing = true;
 
+                //Set rotation
                 captureManager.SetPreviewRotation(VideoRotation.Clockwise90Degrees);
                 captureManager.SetRecordRotation(VideoRotation.Clockwise90Degrees);
 
+                //Enable UI camera button
                 CameraButton.Visibility = Visibility.Visible;
             }
         }
@@ -155,7 +160,7 @@ namespace Budgeteer_WP
         /// </summary>
         /// <param name="capture">The MediaCapture instance currently used</param>
         /// <returns></returns>
-        public async Task DestroyCamera(MediaCapture capture)
+        public async Task StopCamera(MediaCapture capture)
         {
             //TODO: Call this method every time the app loses focus or is terminated
             if (capture != null)
@@ -188,29 +193,27 @@ namespace Budgeteer_WP
         {
             if (IsCameraInitialized)
             {
+                
                 //Get Image
                 IRandomAccessStream imageStream = await CaptureImage();
                 await RotateImage(imageStream, BitmapRotation.Clockwise90Degrees);//Needs to be rotated 90 degrees when in portrait mode
 
-                //Write image stream to temporary file in local storage (for displaying image)
-                /*StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("temp.jpg", CreationCollisionOption.ReplaceExisting);
-                IRandomAccessStream fileStream = await file.OpenAsync(FileAccessMode.ReadWrite);
-                await imageStream.AsStream().CopyToAsync(fileStream.AsStreamForWrite());*/
-
                 //Show image
-                BitmapImage bmp = new BitmapImage();
-                await bmp.SetSourceAsync(imageStream);
-                ScanImage.Source = bmp;
-                AcceptPictureButton.Visibility = Visibility.Visible;
-                RedoPictureButton.Visibility = Visibility.Visible;
+                await ShowPreview(imageStream);
 
                 //Turn off camera
-                await DestroyCamera(captureManager);
-               
-                //TODO: Send OCR request
-                /*Ocr.ReceivedOcrData+=(object s, string ee)=>{ScanNewTextBlock.Text=ee;};
-                Ocr.BeginGetOcrRequest(imageStream.AsStream());*/
+                await StopCamera(captureManager);
             }
+        }
+
+        private async Task ShowPreview(IRandomAccessStream imageStream)
+        {
+            BitmapImage bmp = new BitmapImage();
+            currentImageStream = imageStream;
+            await bmp.SetSourceAsync(imageStream);
+            ScanImage.Source = bmp;
+            AcceptPictureButton.Visibility = Visibility.Visible;
+            RedoPictureButton.Visibility = Visibility.Visible;
         }
 
         /// <summary>
@@ -278,6 +281,19 @@ namespace Budgeteer_WP
                     }
                 }
             }
+        }
+
+        private void AcceptPictureButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentImageStream != null)
+            {
+                Ocr.BeginGetOcrRequest(currentImageStream.AsStream());
+            }
+        }
+
+        private void Ocr_ReceivedOcrData(object sender, string data)
+        {
+            //TODO: Extract price and name information from ocr data
         }
 
     }

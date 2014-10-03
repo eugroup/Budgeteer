@@ -21,7 +21,7 @@ namespace Budgeteer
 		public static void BeginGetOcrRequest(Stream imageStream)
 		{
 			//TODO: make central data store for urls like this one
-			Uri uri = new Uri ("http://api.budgeteer/devbase.biz/performOcr.php", UriKind.Absolute);
+			Uri uri = new Uri ("http://api.budgeteer.devbase.biz/", UriKind.Absolute);
 			HttpWebRequest request = HttpWebRequest.CreateHttp (uri);
 			request.Method = "POST";
 
